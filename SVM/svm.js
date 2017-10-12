@@ -36,7 +36,7 @@ function fillScene() {
 	gui.domElement.style.right = "0";
   
   //skybox
-  var imagePrefix = "images/airport/sky-";
+  var imagePrefix = "../images/airport/sky-";
   var imageSuffix = ".png";
   var urls  = [imagePrefix+"xpos"+imageSuffix, imagePrefix+"xneg"+imageSuffix,
   						imagePrefix+"ypos"+imageSuffix, imagePrefix+"yneg"+imageSuffix,
