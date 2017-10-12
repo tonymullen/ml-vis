@@ -137,8 +137,8 @@ function drawObjects( reflectionCube ) {
 }
 
 function init() {
-	canvasWidth = window.innerWidth;
-	canvasHeight = window.innerHeight;
+	canvasWidth = 600;
+	canvasHeight = 400;
 
 
 	var canvasRatio = canvasWidth / canvasHeight;
