@@ -177,17 +177,12 @@ function animate() {
 	render();
 }
 
-function calculateMargin() {
-  
-}
-
-function calculateHyperPlane() {
-  calculateMargin();
+function calculateLinearRegression() {
   
 }
 
 function updateScene(){
-  calculateHyperPlane()
+  calculateLinearRegression()
 }
 
 function render() {

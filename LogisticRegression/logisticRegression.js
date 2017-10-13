@@ -3,7 +3,7 @@
 /*global THREE, Coordinates, document, window  */
 var camera, scene, renderer, cameraControls, canvasWidth, canvasHeight,
     plane, surfacePointBall, center, lineIn, lineInGeom, rayObject,
-    lineMat, gui, params, spikeyGeom,
+    lineMat, gui, params, spikeyGeom, trainingData, testData,
     intersects;
 var objects = [];
 var greenBalls = [];
@@ -78,12 +78,13 @@ function fillScene() {
 			console.log( Math.round(percentComplete, 2) + '% downloaded' );
 		}
 	};
+  
 	var onError = function ( xhr ) {
 	};
   
   var loader = new THREE.OBJLoader( manager );
 		loader.load( '../images/spikey.obj', function ( object ) { 
-      spikeyGeom = object.children[0].geometry, 
+      spikeyGeom = object.children[0].geometry; 
 		}, onProgress, onError );
   
   var textureLoader = new THREE.CubeTextureLoader();
@@ -96,31 +97,7 @@ function fillScene() {
 }
 
 function drawObjects( reflectionCube ) {
-  rayObject = new THREE.Object3D();
-  
-  surfacePointBall = new THREE.Mesh( new THREE.SphereGeometry( 15, 12, 12),
-                       new THREE.MeshLambertMaterial({ color: 0xffff00 }));
-  surfacePointBall.name = 'surfacePoint';
-  scene.add( surfacePointBall );
-  
-  var material = new THREE.MeshPhongMaterial( {
-		shininess: 100,
-		transparent: true,
-		opacity: 0.5,
-		envMap: reflectionCube,
-    side: THREE.DoubleSide,
-		combine: THREE.MixOperation,
-		reflectivity: 0.3 } );
-	material.color.setRGB( 0.3, 0, 0.3 );
-	material.specular.setRGB( 1, 1, 1 );
-  
-  var geo = new THREE.PlaneGeometry(10000, 10000);
-  geo.computeFaceNormals();
 
-  plane = new THREE.Mesh(geo, material)
-  plane.name = 'plane';
-  scene.add(plane);  
-  
   var greenMat = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
   var redMat = new THREE.MeshLambertMaterial({ color: 0xff0000 });
   var hiLiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
@@ -146,7 +123,8 @@ function drawObjects( reflectionCube ) {
   }
   
   for ( var i = 0; i < params.unseens; i++ ){
-    var newUnseen = new THREE.Mesh( spikeyGeom, redMat);
+    var newUnseen = new THREE.Mesh( spikeyGeom, 
+      new THREE.MeshLambertMaterial({ color: 0xffff00 }));
     unseens.push(newUnseen);
     objects.push(newUnseen);
     scene.add(newUnseen);
@@ -209,17 +187,23 @@ function animate() {
 	render();
 }
 
-function calculateMargin() {
-  
+function trainModel() {
+  trainingData = [];
+  greenBalls.forEach(function(p){
+    trainingData.push([1, p.position.x, p.position.y, p.position.z])
+  });
+  redBalls.forEach(function(n){
+    trainingData.push([-1, n.position.x, n.position.y, n.position.z])
+  });
+  //console.log(trainingData);
 }
 
-function calculateHyperPlane() {
-  calculateMargin();
-  
+function classifyUnseens() {
+
 }
 
 function updateScene(){
-  calculateHyperPlane()
+  trainModel();
 }
 
 function render() {
