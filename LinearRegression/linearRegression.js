@@ -2,11 +2,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 /*global THREE, Coordinates, document, window  */
 var camera, scene, renderer, cameraControls, canvasWidth, canvasHeight,
-    plane, surfacePointBall, center, lineIn, lineInGeom, rayObject,
+    plane, surfacePointBall, center, line, lineGeom, rayObject,
     lineMat, gui, params, 
     intersects;
 var objects = [];
-var greenBalls = [];
 var redBalls = [];
 var iplane = new THREE.Plane(),
 mouse = new THREE.Vector2(),
@@ -16,6 +15,7 @@ intersection = new THREE.Vector3(), INTERSECTED, SELECTED; // for grabbing
 var projector = new THREE.Projector();
 var raycaster = new THREE.Raycaster();
 var clock = new THREE.Clock();
+var regressionVector = new THREE.Vector3(0, 1, 0);
 
 function fillScene() {
   // Set up gui sliders
@@ -25,23 +25,13 @@ function fillScene() {
 	});
   
 	params = {
-		redBalls: 5,
-    greenBalls: 5
+		redBalls: 5
 	}
   
   gui.add(params, 'redBalls').min(3).max(7).step(1).name('Red Balls');
-  gui.add(params, 'greenBalls').min(3).max(7).step(1).name('Green Balls');
 	gui.domElement.style.position = "absolute";
 	gui.domElement.style.top = "0";
 	gui.domElement.style.right = "0";
-  
-  //skybox
-  var imagePrefix = "../images/airport/sky-";
-  var imageSuffix = ".png";
-  var urls  = [imagePrefix+"xpos"+imageSuffix, imagePrefix+"xneg"+imageSuffix,
-  						imagePrefix+"ypos"+imageSuffix, imagePrefix+"yneg"+imageSuffix,
-  						imagePrefix+"zpos"+imageSuffix, imagePrefix+"zneg"+imageSuffix];
-
 
 	scene = new THREE.Scene();
 	scene.fog = new THREE.Fog( 0x808080, 2000, 4000 );
@@ -64,76 +54,49 @@ function fillScene() {
   axes.position.y = 1;
   scene.add(axes);
 
-  var textureLoader = new THREE.CubeTextureLoader();
-  textureLoader.load( urls, function (texture) {
-    drawObjects(texture);
-    addToDOM();
-    animate();
-  } );
-  
+  drawObjects();
+  addToDOM();
+  animate();
 }
 
-function drawObjects( reflectionCube ) {
+function drawObjects() {
   rayObject = new THREE.Object3D();
   
-  surfacePointBall = new THREE.Mesh( new THREE.SphereGeometry( 15, 12, 12),
-                       new THREE.MeshLambertMaterial({ color: 0xffff00 }));
-  surfacePointBall.name = 'surfacePoint';
-  scene.add( surfacePointBall );
-  
-  var material = new THREE.MeshPhongMaterial( {
-		shininess: 100,
-		transparent: true,
-		opacity: 0.5,
-		envMap: reflectionCube,
-    side: THREE.DoubleSide,
-		combine: THREE.MixOperation,
-		reflectivity: 0.3 } );
-	material.color.setRGB( 0.3, 0, 0.3 );
-	material.specular.setRGB( 1, 1, 1 );
-  
-  var geo = new THREE.PlaneGeometry(10000, 10000);
-  geo.computeFaceNormals();
-
-  plane = new THREE.Mesh(geo, material)
-  plane.name = 'plane';
-  scene.add(plane);  
-  
-  var greenMat = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
   var redMat = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-  var hiLiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
   
-  for ( var i = 0; i < params.greenBalls; i++ ){
-    var newBall = new THREE.Mesh( new THREE.SphereGeometry(30, 12, 12), greenMat);
-    newBall.class = 1;
-    greenBalls.push(newBall);
-    objects.push(newBall);
-    scene.add(newBall);
-    newBall.position.z = 100;
-    newBall.position.x = i * 30;
-  }
-
   for ( var i = 0; i < params.redBalls; i++ ){
     var newBall = new THREE.Mesh( new THREE.SphereGeometry(30, 12, 12), redMat);
     newBall.class = -1;
     redBalls.push(newBall);
     objects.push(newBall);
-    scene.add(newBall);
-    newBall.position.z = -100;
-    newBall.position.x = i * 30;
+    scene.add(newBall)
+    newBall.position.y = i * 70;
   }
   
-  lineMat = new THREE.LineDashedMaterial({
-	   color: 0xffffff
-  });
-
-  // lineInGeom= new THREE.Geometry();
-  // lineInGeom.vertices.push(
-	//    greenBall.position,
-	//    redConeObj.position
-  //  );
-  // lineIn = new THREE.Line( lineInGeom, lineMat );
+  var grayMat = new THREE.MeshLambertMaterial({ color: 0x7f7f7f });
+  var grayBall1 = new THREE.Mesh( new THREE.SphereGeometry(30, 12, 12), grayMat);
+  objects.push(grayBall1);
+  grayBall1.position.y = -100;
+  scene.add(grayBall1);
   
+  var grayBall2 = new THREE.Mesh( new THREE.SphereGeometry(30, 12, 12), grayMat);
+  objects.push(grayBall2);
+  grayBall2.position.addVectors(
+    grayBall1.position, 
+    regressionVector.clone().multiplyScalar(450));
+  scene.add(grayBall2);
+  
+  lineMat = new THREE.LineBasicMaterial({
+	   color: 0x000000
+  });
+  
+  lineGeom= new THREE.Geometry();
+  lineGeom.vertices.push(
+  	  grayBall1.position,
+      grayBall2.position
+    );
+  line = new THREE.Line( lineGeom, lineMat );
+  scene.add(line)
 }
 
 function init() {
@@ -153,7 +116,6 @@ function init() {
   renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
   renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
   renderer.setPixelRatio( window.devicePixelRatio );
-  window.addEventListener( 'resize', onWindowResize, false );
 
 	// CAMERA
 	camera = new THREE.PerspectiveCamera( 45, canvasRatio, 1, 8000 );
@@ -172,7 +134,6 @@ function addToDOM() {
 }
 
 function animate() {
-  updateScene();
 	window.requestAnimationFrame(animate);
 	render();
 }
@@ -188,8 +149,7 @@ function updateScene(){
 function render() {
 	var delta = clock.getDelta();
 	cameraControls.update(delta);
-	camera.updateMatrixWorld();
-  
+	camera.updateMatrixWorld();  
 	renderer.render(scene, camera);
 }
 
@@ -210,6 +170,7 @@ function onDocumentMouseMove( event ) {
     if ( raycaster.ray.intersectPlane( iplane, intersection ) ) {
           var prevPos = SELECTED.position.clone();
           SELECTED.position.copy( intersection.sub( offset ) );
+          updateScene();
     }
 		return;
 	}
@@ -257,20 +218,10 @@ function onDocumentMouseUp( event ) {
 }
 
 function toXYCoords (pos) {
-  //var vector = projector.projectVector(pos.clone(), camera);
 	var vector = pos.clone().project(camera);
 	vector.x = (vector.x + 1)/2 * canvasWidth;
 	vector.y = -(vector.y - 1)/2 * canvasHeight;
-	//console.log(vector);
   return vector;
-}
-
-function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
-
-	renderer.setSize( window.innerWidth, window.innerHeight );
-
 }
 
 try {

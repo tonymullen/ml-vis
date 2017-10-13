@@ -153,7 +153,6 @@ function init() {
   renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
   renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
   renderer.setPixelRatio( window.devicePixelRatio );
-  window.addEventListener( 'resize', onWindowResize, false );
 
 	// CAMERA
 	camera = new THREE.PerspectiveCamera( 45, canvasRatio, 1, 8000 );
@@ -268,14 +267,6 @@ function toXYCoords (pos) {
 	vector.y = -(vector.y - 1)/2 * canvasHeight;
 	//console.log(vector);
   return vector;
-}
-
-function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
-
-	renderer.setSize( window.innerWidth, window.innerHeight );
-
 }
 
 try {

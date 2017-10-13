@@ -132,18 +132,6 @@ function drawObjects( reflectionCube ) {
     newUnseen.position.x = i * 30;
   }  
   
-  
-  lineMat = new THREE.LineDashedMaterial({
-	   color: 0xffffff
-  });
-
-  // lineInGeom= new THREE.Geometry();
-  // lineInGeom.vertices.push(
-	//    greenBall.position,
-	//    redConeObj.position
-  //  );
-  // lineIn = new THREE.Line( lineInGeom, lineMat );
-  
 }
 
 function init() {
@@ -163,7 +151,6 @@ function init() {
   renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
   renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
   renderer.setPixelRatio( window.devicePixelRatio );
-  window.addEventListener( 'resize', onWindowResize, false );
 
 	// CAMERA
 	camera = new THREE.PerspectiveCamera( 45, canvasRatio, 1, 8000 );
@@ -284,14 +271,6 @@ function toXYCoords (pos) {
 	vector.y = -(vector.y - 1)/2 * canvasHeight;
 	//console.log(vector);
   return vector;
-}
-
-function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
-
-	renderer.setSize( window.innerWidth, window.innerHeight );
-
 }
 
 try {
