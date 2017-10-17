@@ -3,7 +3,7 @@
 /*global THREE, Coordinates, document, window  */
 var camera, scene, renderer, cameraControls, canvasWidth, canvasHeight,
     plane, surfacePointBall, center, line, lineGeom, rayObject,
-    lineMat, gui, params, 
+    lineMat, gui, params, mat, centroid, m, 
     intersects;
 var objects = [];
 var redBalls = [];
@@ -86,6 +86,11 @@ function drawObjects() {
     regressionVector.clone().multiplyScalar(450));
   scene.add(grayBall2);
   
+  var yellowMat = new THREE.MeshLambertMaterial({ color: 0xffff00 });
+  centroid = new THREE.Mesh( new THREE.SphereGeometry(15, 12, 12), yellowMat);
+  objects.push(centroid);
+  scene.add(centroid);
+  
   lineMat = new THREE.LineBasicMaterial({
 	   color: 0x000000
   });
@@ -139,11 +144,41 @@ function animate() {
 }
 
 function calculateLinearRegression() {
+  var events = [];
+  redBalls.forEach( function (b) {
+    events.push([b.position.x, b.position.y, b.position.z])
+  });
   
 }
 
 function updateScene(){
-  calculateLinearRegression()
+  calculateCentroid();
+  createMatrix();
+  //calculateLinearRegression()
+}
+
+
+
+function createMatrix() {
+  mat = [];
+  redBalls.forEach( function (b) {
+    mat.push([b.position.x, b.position.y, b.position.z]);
+  });
+  m = new Matrix(mat);
+}
+
+
+function calculateCentroid() {
+  var xCent = 0, yCent = 0, zCent = 0;
+  redBalls.forEach( function (b) {
+    xCent += b.position.x;
+    yCent += b.position.y;
+    zCent += b.position.z
+  });
+  xCent = xCent/redBalls.length;
+  yCent = yCent/redBalls.length;
+  zCent = zCent/redBalls.length;
+  centroid.position.set(xCent, yCent, zCent);
 }
 
 function render() {
@@ -202,6 +237,7 @@ function onDocumentMouseDown( event ) {
 		SELECTED = intersects[ 0 ].object.userData.parent || intersects[ 0 ].object;
 		if ( raycaster.ray.intersectPlane( iplane, intersection ) ) {
 			offset.copy( intersection ).sub( SELECTED.position );
+      
 		}
 		canvas.style.cursor = 'move';
 	}
